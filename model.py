@@ -1,3 +1,4 @@
+#import the necessary modules
 import os
 import tensorflow as tf
 from tensorflow import keras
@@ -6,12 +7,12 @@ import zipfile
 import matplotlib.pyplot as plt
 import numpy as np
 
-
+#unzipping the data
 zip_ref = zipfile.ZipFile('garbagedata.zip', 'r')
 zip_ref.extractall("/split-garbage-dataset")
 zip_ref.close()
 
-
+#understanding our data
 image_count = 0
 labels = []
 train_counts = []
@@ -29,10 +30,7 @@ for ele in train_counts:
     result = round(total_samples / (total_classes * ele),2)
     class_weights.append(result)
 
-
 class_weights = dict(zip(train_generator.class_indices.values(),class_weights))
-
-
 
 
 # Add our data-augmentation parameters to ImageDataGenerator
@@ -48,7 +46,6 @@ train_datagen = ImageDataGenerator(rescale = 1./255.,
 
 # Note that the validation data should not be augmented!
 valid_datagen = ImageDataGenerator( rescale = 1.0/255. )
-test_datagen = ImageDataGenerator( rescale = 1.0/255. )
 
 # Flow training images in batches of 8 using train_datagen generator
 train_generator = train_datagen.flow_from_directory('../input/split-garbage-dataset/train',
@@ -63,6 +60,7 @@ validation_generator = valid_datagen.flow_from_directory( '../input/split-garbag
                                                           target_size = (150,150))
 
 
+#Build model
 
 tf.keras.backend.clear_session()
 tf.random.set_seed(42)
@@ -75,10 +73,11 @@ avg = keras.layers.GlobalAveragePooling2D()(xception_model.output)
 output = keras.layers.Dense(6, activation="softmax")(avg)
 model2 = keras.models.Model(inputs=xception_model.input, outputs=output)
 
-
+#Compile the model
 optimizer = keras.optimizers.Nadam(lr=0.001, beta_1=0.9, beta_2=0.999)
 model2.compile(optimizer =optimizer ,loss = 'categorical_crossentropy',metrics =['accuracy'])
 
+#Define exponential decay learning rate scheduler
 def exponential_decay(lr0, s):
     def exponential_decay_fn(epoch):
         return lr0 * 0.1**(epoch / s)
@@ -86,19 +85,19 @@ def exponential_decay(lr0, s):
 
 exponential_decay_fn = exponential_decay(lr0=0.001, s=10)
 
-
-
-early_stopping_cb = tf.keras.callbacks.EarlyStopping(patience = 10,restore_best_weights = True)
+#callbacks to be used while training
 lr_scheduler = keras.callbacks.LearningRateScheduler(exponential_decay_fn)
+early_stopping_cb = tf.keras.callbacks.EarlyStopping(patience = 10,restore_best_weights = True)
 mc =tf.keras.callbacks.ModelCheckpoint('XceptionLR_Xce2exp.h5', save_best_only=True)
+
 class CustomCallBack(tf.keras.callbacks.Callback):
         def on_epoch_end(self,epoch,logs={}):
             if(logs.get('accuracy')>0.99):
                 print("\nReached 99.0% accuracy so cancelling training!")
                 self.model.stop_training = True
-
-
 mycallback = CustomCallBack()
+
+#train the model
 history1 = model2.fit(
             train_generator,
             steps_per_epoch=train_generator.samples/train_generator.batch_size,
@@ -108,6 +107,7 @@ history1 = model2.fit(
             callbacks= [early_stopping_cb,mc,lr_scheduler,mycallback],
             verbose=1)
 
+#Understanding the accuracy and loss of the model
 fig = plt.figure(figsize=(10,10))
 
 # Plot accuracy
