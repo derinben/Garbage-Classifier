@@ -1,6 +1,6 @@
 <h1> Garbage_Classifier </h1>
 
-I have built a CNN model to predict the type of garbage by training it from a set of 6 different classes. <br>
+A CNN model to predict the type of garbage by training it from a set of 6 different classes. <br>
   - Cardboard
   - Glass
   - Metal
@@ -8,7 +8,7 @@ I have built a CNN model to predict the type of garbage by training it from a se
   - Plastic
   - Trash  
 <br>
- I've used the architecture of Xception Model along with a learning rate scheduler and custom callbacks to try and prevent over-fitting.
+ We've used the architecture of Xception Model along with a learning rate scheduler and custom callbacks to try and prevent over-fitting.
 <br>
 
  Please refer to my kaggle notebook for detailed comments on the code
